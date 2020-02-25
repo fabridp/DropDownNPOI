@@ -4,7 +4,6 @@ using NPOI.XSSF.UserModel;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace NPOICore
 {
@@ -15,32 +14,27 @@ namespace NPOICore
             var outputFileName = "PortfolioImportTemplate.xlsx";
             using (var templateStream = new FileStream(outputFileName, FileMode.Open, FileAccess.Read))
             {
-                var excel = new XSSFWorkbook(templateStream);
-                var sheet = (XSSFSheet)excel.GetSheetAt(0);
-
-                Task.Run(() =>
-                {
-                    CreateMetaDataRows(excel.CreateSheet("Area Manager"), DataSources.AreaManagers);
-                });
-
-                Task.Run(() =>
-                {
-                    CreateMetaDataRows(excel.CreateSheet("Sales"), DataSources.Sales);
-                });
-
-                Task.Run(() =>
-                {
-                    CreateMetaDataRows(excel.CreateSheet("Products"), DataSources.Products);
-                });
-                SetCodeColumn(sheet, "F", 6, 50000, "Area Manager");
-                SetCodeColumn(sheet, "G", 7, 50000, "Sales");
-                SetCodeColumn(sheet, "H", 8, 50000, "Products");
+                XSSFWorkbook excel = CompleteVersionWithCodes(templateStream);
 
                 using (var outputStream = new FileStream(outputFileName, FileMode.Create, FileAccess.Write))
                 {
                     excel.Write(outputStream);
                 }
             }
+        }
+
+        private static XSSFWorkbook CompleteVersionWithCodes(FileStream templateStream)
+        {
+            var excel = new XSSFWorkbook(templateStream);
+            var sheet = (XSSFSheet)excel.GetSheetAt(0);
+
+            CreateMetaDataRows(excel.CreateSheet("Area Manager"), DataSources.AreaManagers);
+            SetCodeColumn(sheet, "F", 6, 50000, "Area Manager");
+            CreateMetaDataRows(excel.CreateSheet("Sales"), DataSources.Sales);
+            SetCodeColumn(sheet, "G", 7, 50000, "Sales");
+            CreateMetaDataRows(excel.CreateSheet("Products"), DataSources.Products);
+            SetCodeColumn(sheet, "H", 8, 50000, "Products");
+            return excel;
         }
 
         private static void SetCodeColumn(XSSFSheet sheet, string columnLetter, int colindex, int elements, string sheetName)
